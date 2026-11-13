@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>九九るMagician</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0b0720;color:#f4eeff;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;overflow:hidden}
+#bg1,#bg2,#vig{position:fixed;inset:0;pointer-events:none}
+#bg1{background-color:#1a0f3d;transition:background-color .9s}
+#bg2{background-color:transparent;transition:background-color .9s;-webkit-mask-image:linear-gradient(#000,transparent 55%);mask-image:linear-gradient(#000,transparent 55%)}
+#vig{background:radial-gradient(circle at 50% 42%,transparent 25%,rgba(5,2,18,.82) 100%)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+#ui{position:relative;z-index:2;height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:20px;letter-spacing:.04em}
+h1 span{font-size:13px;opacity:.7;margin-left:6px;font-weight:400}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.chip{background:rgba(255,255,255,.12);padding:7px 13px;border-radius:99px;font-size:14px}
+#stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;text-align:center}
+#eq{font-size:clamp(56px,17vw,92px);font-weight:800;letter-spacing:.04em;text-shadow:0 0 22px rgba(255,255,255,.35);line-height:1.1}
+#axis{font-size:12px;opacity:.75;margin-top:4px;min-height:16px}
+#hintBtn{margin-top:14px;background:rgba(255,255,255,.1);padding:6px 14px;border-radius:99px;font-size:13px}
+#hint{margin-top:8px;font-size:15px;min-height:22px;color:#ffe9a8}
+#witch{display:flex;gap:10px;align-items:flex-end;margin-bottom:10px}
+#face{font-size:46px;line-height:1}
+#bubble{flex:1;background:rgba(255,255,255,.14);border-radius:16px 16px 16px 4px;padding:10px 13px;font-size:15px;line-height:1.5;min-height:52px;backdrop-filter:blur(4px)}
+#controls{display:flex;flex-direction:column;gap:9px}
+#mic{background:linear-gradient(135deg,#8a5cff,#ff5cb0);padding:15px;border-radius:18px;font-size:18px;font-weight:700;box-shadow:0 4px 18px rgba(160,90,255,.5)}
+#mic.on{animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.03);box-shadow:0 0 28px rgba(255,120,200,.9)}}
+#typeForm{display:flex;gap:8px}
+#typeIn{flex:1;min-width:0;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:#fff}
+#typeForm button{background:rgba(255,255,255,.18);padding:0 16px;border-radius:12px;font-size:15px}
+#heard{font-size:12px;opacity:.75;min-height:16px}
+#nextBtn{background:linear-gradient(135deg,#8a5cff,#ff5cb0);padding:15px;border-radius:18px;font-size:18px;font-weight:700}
+#skip{background:none;font-size:12px;opacity:.6;text-decoration:underline;margin-top:6px}
+.hide{display:none!important}
+#spell{position:fixed;left:0;right:0;top:58%;z-index:30;text-align:center;pointer-events:none;opacity:0}
+#spell b{display:block;font-size:clamp(30px,10vw,52px);letter-spacing:.06em;text-shadow:0 0 18px currentColor,0 2px 8px #000}
+#spell small{display:block;font-size:14px;margin-top:4px;text-shadow:0 1px 6px #000}
+#spell.show{animation:spellIn 2.9s ease-out forwards}
+@keyframes spellIn{0%{opacity:0;transform:scale(.6)}12%{opacity:1;transform:scale(1.08)}20%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+#zukan{position:fixed;inset:0;z-index:40;background:rgba(8,4,24,.94);padding:max(14px,env(safe-area-inset-top)) 12px 14px;overflow:auto}
+#zukan .top{display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:0 auto 6px}
+#zukan p{max-width:520px;margin:0 auto 8px;font-size:12px;opacity:.75;line-height:1.5}
+#grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:520px;margin:0 auto}
+#grid div,#grid button{aspect-ratio:1;border-radius:7px;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0}
+#grid .hd{font-weight:700;font-size:13px}
+#grid button{color:#fff;text-shadow:0 1px 3px #000;position:relative}
+#grid button.done::after{content:"✦";position:absolute;top:0;right:2px;font-size:9px;color:#fff6b0}
+</style>
+</head>
+<body>
+<div id="bg1"></div><div id="bg2"></div><div id="vig"></div>
+<canvas id="fx"></canvas>
+
+<main id="ui">
+  <header>
+    <h1>九九る<span>Magician</span></h1>
+    <button class="chip" id="zukanBtn">図鑑 <span id="cnt">0/81</span></button>
+  </header>
+  <section id="stage">
+    <div id="eq">? × ?</div>
+    <div id="axis"></div>
+    <button id="hintBtn" class="hide">英語のヒント</button>
+    <div id="hint"></div>
+  </section>
+  <div id="witch">
+    <div id="face">🧙‍♀️</div>
+    <div id="bubble"></div>
+  </div>
+  <div id="controls" class="hide">
+    <button id="mic">🎙 呪文を唱える</button>
+    <form id="typeForm">
+      <input id="typeIn" placeholder="マイクが使えない時はここ (two times nine is eighteen)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button type="submit">唱える</button>
+    </form>
+    <div id="heard"></div>
+  </div>
+  <div id="tutCtl" style="text-align:center">
+    <button id="nextBtn" style="width:100%">つぎへ</button>
+    <button id="skip">チュートリアルをスキップ</button>
+  </div>
+</main>
+
+<div id="spell"></div>
+
+<div id="zukan" class="hide">
+  <div class="top"><b>魔法図鑑</b><button class="chip" id="zClose">とじる</button></div>
+  <p>よこ＝×の前の数字（背景色・左から）／たて＝×の後の数字（上から）。タップすると81通りの魔法を見られます。✦は唱えたことがある魔法。</p>
+  <div id="grid"></div>
+</div>
+
+<script>
+'use strict';
+/* ========== 属性 ========== */
+const ATTR=[null,
+{n:'火',l:'Ignis',  c:'#ff5a1f',c2:'#ffc04d',shape:'ember', g:-70,w:30,sp:[150,300]},
+{n:'氷',l:'Glacies',c:'#7fe3ff',c2:'#e6fbff',shape:'shard', g:45, w:10,sp:[120,240]},
+{n:'雷',l:'Fulmen', c:'#ffe53b',c2:'#ffffff',shape:'bolt',  g:0,  w:0, sp:[380,620]},
+{n:'風',l:'Ventus', c:'#7dffc4',c2:'#d6fff0',shape:'streak',g:0,  w:60,sp:[420,700]},
+{n:'水',l:'Aqua',   c:'#3b82ff',c2:'#9fd0ff',shape:'drop',  g:130,w:20,sp:[140,260]},
+{n:'森',l:'Silva',  c:'#4cd964',c2:'#b6ff8a',shape:'leaf',  g:30, w:90,sp:[110,220]},
+{n:'薔薇',l:'Rosa',  c:'#ff4f8b',c2:'#ffc2d9',shape:'petal', g:50, w:70,sp:[90,200]},
+{n:'光',l:'Lux',     c:'#fff2a8',c2:'#ffffff',shape:'star',  g:0,  w:20,sp:[100,260]},
+{n:'闇',l:'Umbra',   c:'#9b5cff',c2:'#2b0a55',shape:'orb',   g:0,  w:40,sp:[90,200]}];
+
+/* ========== 数字→英語 / 英語→数字 ========== */
+const W1=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const W10={2:'twenty',3:'thirty',4:'forty',5:'fifty',6:'sixty',7:'seventy',8:'eighty'};
+function words(n){if(n<20)return W1[n];const t=Math.floor(n/10),o=n%10;return W10[t]+(o?'-'+W1[o]:'')}
+const ONES={zero:0,one:1,won:1,two:2,to:2,too:2,three:3,tree:3,four:4,for:4,fore:4,five:5,six:6,seven:7,eight:8,ate:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+const TENS={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80};
+function nums(text){
+  const s=String(text).toLowerCase().replace(/(\d)\s*[x×*]\s*(\d)/g,'$1 $2').replace(/-/g,' ');
+  const tk=s.match(/[a-z]+|\d+/g)||[];const out=[];
+  for(let i=0;i<tk.length;i++){
+    const t=tk[i];
+    if(/^\d+$/.test(t)){out.push(+t);continue}
+    if(Object.prototype.hasOwnProperty.call(TENS,t)){
+      let v=TENS[t];const nx=tk[i+1];
+      if(nx&&Object.prototype.hasOwnProperty.call(ONES,nx)&&ONES[nx]>=1&&ONES[nx]<=9){v+=ONES[nx];i++}
+      out.push(v);continue}
+    if(Object.prototype.hasOwnProperty.call(ONES,t))out.push(ONES[t]);
+  }
+  return out;
+}
+function matches(list,target){let i=0;for(const n of list){if(n===target[i])i++;if(i===target.length)return true}return false}
+
+/* ========== 要素 ========== */
+const $=id=>document.getElementById(id);
+const bg1=$('bg1'),bg2=$('bg2'),eqEl=$('eq'),axisEl=$('axis'),hintEl=$('hint'),hintBtn=$('hintBtn');
+const bubble=$('bubble'),controls=$('controls'),tutCtl=$('tutCtl'),mic=$('mic'),heardEl=$('heard');
+const spellEl=$('spell'),typeIn=$('typeIn');
+function hexA(h,a){const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function say(t){bubble.textContent=t}
+
+/* ========== 状態 ========== */
+let Q=null,casting=false,lastKey='',tutStep=0,tutorial=true;
+let seen={};
+try{seen=JSON.parse(localStorage.getItem('kukuru-seen')||'{}')||{}}catch(e){seen={}}
+function saveSeen(){try{localStorage.setItem('kukuru-seen',JSON.stringify(seen))}catch(e){}}
+function updCnt(){$('cnt').textContent=Object.keys(seen).length+'/81'}
+
+/* ========== チュートリアル ========== */
+const TUT=[
+ 'ようこそ、魔法学園へ！わたしは見習い魔女。いっしょに「英語の九九」を呪文にして魔法を使おう。',
+ '画面に出た掛け算を、英語で唱えてね。たとえば「two times three is six」みたいに。',
+ '発音は採点しないよ。聞き取れたら魔法が発動！ダメなら「もう一回！」。式の左の数字は背景の色、右の数字は上から降る魔法を決めるよ。',
+ 'じゃあ練習。マイクに向かって「one times one is one」と唱えてみて！'
+];
+function showTut(){
+  say(TUT[tutStep]);
+  if(tutStep>=3){tutCtl.classList.add('hide');controls.classList.remove('hide');startQuestion([1,1])}
+}
+$('nextBtn').onclick=()=>{tutStep++;showTut()};
+$('skip').onclick=()=>{tutorial=false;tutCtl.classList.add('hide');controls.classList.remove('hide');say('それじゃ本番！画面の式を英語で唱えてね。');startQuestion()};
+
+/* ========== 出題 ========== */
+function startQuestion(fixed){
+  let a,b;
+  if(fixed){[a,b]=fixed}
+  else{do{a=1+Math.floor(Math.random()*9);b=1+Math.floor(Math.random()*9)}while(a+','+b===lastKey)}
+  lastKey=a+','+b;Q={a,b,ans:a*b};
+  eqEl.innerHTML=`<span style="color:${ATTR[a].c}">${a}</span> × <span style="color:${ATTR[b].c}">${b}</span>`;
+  axisEl.textContent=`左から${ATTR[a].n} ／ 上から${ATTR[b].n}`;
+  const phrase=`${words(a)} times ${words(b)} is ${words(a*b)}`;
+  Q.phrase=phrase;
+  hintBtn.classList.remove('hide');hintEl.textContent='';
+  if(fixed)hintEl.textContent=phrase;
+  heardEl.textContent='';typeIn.value='';
+}
+hintBtn.onclick=()=>{hintEl.textContent=Q?Q.phrase:''};
+
+/* ========== 判定 ========== */
+function handle(alts){
+  if(casting||!Q)return;
+  heardEl.textContent='聞こえた: '+(alts[0]||'');
+  const target=[Q.a,Q.b,Q.ans];
+  const ok=alts.some(t=>matches(nums(t),target));
+  if(ok){cast(Q.a,Q.b,false)}
+  else if(alts.some(t=>nums(t).length)){say('ちょっと違うみたい…もう一回！（ヒントを見てもOK）')}
+  else{say('聞き取れなかった…もう一回！')}
+}
+$('typeForm').onsubmit=e=>{e.preventDefault();const v=typeIn.value.trim();if(v)handle([v])};
+
+/* ========== 音声認識 ========== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,listening=false;
+function micFallback(m){say(m);try{typeIn.focus()}catch(e){}}
+function resetMic(){listening=false;mic.classList.remove('on');mic.textContent='🎙 呪文を唱える'}
+mic.onclick=()=>{
+  if(casting||listening)return;
+  if(!SR){micFallback('このブラウザは音声認識に対応してないみたい。下の入力欄に英語で打つか、キーボードの🎤で話してね。');return}
+  try{rec=new SR()}catch(e){micFallback('音声認識を始められなかった。下の入力欄を使ってね。');return}
+  rec.lang='en-US';rec.interimResults=false;rec.maxAlternatives=5;rec.continuous=false;
+  rec.onstart=()=>{listening=true;mic.classList.add('on');mic.textContent='🎧 聞いてるよ…'};
+  rec.onresult=e=>{const r=e.results[0];const alts=[];for(let i=0;i<r.length;i++)alts.push(r[i].transcript);handle(alts)};
+  rec.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')micFallback('このページではマイクが許可されてないみたい。下の入力欄に打つか、キーボードの🎤(英語)で話してね。');
+    else if(e.error==='no-speech'||e.error==='aborted')say('聞こえなかった…もう一回！');
+    else say('うまく聞き取れなかった…もう一回！（通信が必要だよ）');
+  };
+  rec.onend=resetMic;
+  try{rec.start()}catch(e){resetMic();say('もう一回押してみて！')}
+};
+
+/* ========== 効果音 ========== */
+let AC=null;
+function chime(a,b){
+  try{
+    if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.resume)AC.resume();
+    const pent=[0,2,4,7,9];const base=196*Math.pow(2,(a*2)/12);const t0=AC.currentTime;
+    for(let i=0;i<6;i++){
+      const d=(i*(b%4+1))%7;const semi=pent[d%5]+(d>4?12:0);
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.type=(a===3||a===1)?'sawtooth':(a===9?'sine':'triangle');
+      o.frequency.value=base*Math.pow(2,semi/12);
+      g.gain.setValueAtTime(0,t0+i*.09);g.gain.linearRampToValueAtTime(.07,t0+i*.09+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+i*.09+.5);
+      o.connect(g);g.connect(AC.destination);o.start(t0+i*.09);o.stop(t0+i*.09+.55);
+    }
+  }catch(e){}
+}
+
+/* ========== エフェクトエンジン ========== */
+const cv=$('fx'),ctx=cv.getContext('2d');
+let cw=0,ch=0;
+function resize(){const d=Math.min(window.devicePixelRatio||1,2);cw=window.innerWidth;ch=window.innerHeight;cv.width=cw*d;cv.height=ch*d;ctx.setTransform(d,0,0,d,0,0)}
+window.addEventListener('resize',resize);resize();
+let P=[],rings=[],circ=null,emit=null,cx=0,cy=0;
+
+function spawn(k,axis){
+  if(P.length>650)return;
+  const A=ATTR[k];const s=rnd(A.sp[0],A.sp[1]);let x,y,vx,vy;
+  if(axis==='h'){x=-20;y=rnd(ch*.06,ch*.94);vx=s;vy=rnd(-40,40)}
+  else{y=-20;x=rnd(cw*.04,cw*.96);vy=s;vx=rnd(-40,40)}
+  P.push({k,x,y,vx,vy,t:0,life:rnd(1.2,2.1),sz:rnd(.75,1.6),rot:rnd(0,6.28),vr:rnd(-5,5),seed:rnd(0,100),col:Math.random()<.5?A.c:A.c2});
+}
+function burst(k,n){
+  const A=ATTR[k];
+  for(let i=0;i<n;i++){
+    const a=rnd(0,6.283),s=rnd(120,520);
+    P.push({k,x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rnd(.9,1.7),sz:rnd(.7,1.5),rot:0,vr:0,seed:rnd(0,100),col:Math.random()<.5?A.c:'#fff',shape:'star',drag:.955});
+  }
+}
+function updP(p,dt){
+  p.t+=dt;const A=ATTR[p.k];
+  if(p.drag){const d=Math.pow(p.drag,dt*60);p.vx*=d;p.vy*=d;p.x+=p.vx*dt;p.y+=p.vy*dt}
+  else{
+    const wob=Math.sin(p.t*6+p.seed)*A.w;
+    if(A.shape==='orb'){const c=Math.cos(dt*2.2),s=Math.sin(dt*2.2);const nx=p.vx*c-p.vy*s;p.vy=p.vx*s+p.vy*c;p.vx=nx}
+    p.x+=(p.vx+wob)*dt;p.y+=(p.vy+A.g*p.t+wob*.4)*dt;
+  }
+}
+function drawP(p){
+  const A=ATTR[p.k];
+  const al=Math.max(0,Math.min(1,p.t/.15,(p.life-p.t)/.45));if(al<=0)return;
+  const sz=p.sz,sh=p.shape||A.shape;
+  ctx.save();ctx.globalAlpha=al;ctx.translate(p.x,p.y);
+  switch(sh){
+    case 'ember':{ctx.globalCompositeOperation='lighter';const r=11*sz*(.8+.3*Math.sin(p.t*18+p.seed));const g=ctx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,'#fff');g.addColorStop(.3,p.col);g.addColorStop(1,hexA(A.c,0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.fill();break}
+    case 'shard':{ctx.rotate(p.rot+p.t*p.vr*.3);ctx.beginPath();ctx.moveTo(0,-14*sz);ctx.lineTo(6*sz,0);ctx.lineTo(0,14*sz);ctx.lineTo(-6*sz,0);ctx.closePath();ctx.globalAlpha=al*.85;ctx.fillStyle=p.col;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();break}
+    case 'bolt':{ctx.globalCompositeOperation='lighter';const l=Math.hypot(p.vx,p.vy)||1,dx=p.vx/l,dy=p.vy/l;ctx.shadowColor=p.col;ctx.shadowBlur=14;ctx.lineJoin='round';ctx.beginPath();for(let i=0;i<=4;i++){const X=-dx*i*16+(i?rnd(-9,9):0),Y=-dy*i*16+(i?rnd(-9,9):0);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)}ctx.strokeStyle=p.col;ctx.lineWidth=3*sz;ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke();break}
+    case 'streak':{ctx.globalCompositeOperation='lighter';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-p.vx*.09,-p.vy*.09);ctx.strokeStyle=p.col;ctx.lineWidth=2*sz;ctx.lineCap='round';ctx.stroke();break}
+    case 'drop':{const g=ctx.createRadialGradient(-2,-2,1,0,0,7*sz);g.addColorStop(0,'#fff');g.addColorStop(.4,p.col);g.addColorStop(1,A.c);ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,6*sz,0,7);ctx.fill();const rem=p.life-p.t;if(rem<.45){const r=(.45-rem);ctx.strokeStyle=p.col;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,r*90,r*32,0,0,7);ctx.stroke()}break}
+    case 'leaf':{ctx.rotate(p.rot+Math.sin(p.t*4+p.seed)*.8);ctx.fillStyle=p.col;ctx.beginPath();ctx.ellipse(0,0,11*sz,5*sz,0,0,7);ctx.fill();ctx.strokeStyle='rgba(0,60,0,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-11*sz,0);ctx.lineTo(11*sz,0);ctx.stroke();break}
+    case 'petal':{ctx.rotate(p.rot+Math.sin(p.t*5+p.seed)*1.2);ctx.fillStyle=p.col;ctx.beginPath();ctx.ellipse(0,0,9*sz,6*sz,0,0,7);ctx.fill();ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.ellipse(-2,-1,4*sz,2.5*sz,0,0,7);ctx.fill();break}
+    case 'star':{ctx.globalCompositeOperation='lighter';const s=(.55+.45*Math.sin(p.t*14+p.seed))*13*sz;ctx.shadowColor=p.col;ctx.shadowBlur=10;ctx.fillStyle=p.col;ctx.beginPath();for(let i=0;i<8;i++){const r=i%2?s*.25:s,a=i*Math.PI/4;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();break}
+    case 'orb':{ctx.shadowColor=p.col;ctx.shadowBlur=12;ctx.fillStyle=A.c2;ctx.strokeStyle=A.c;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,9*sz*(.9+.15*Math.sin(p.t*8+p.seed)),0,7);ctx.fill();ctx.stroke();break}
+  }
+  ctx.restore();
+}
+function poly(n,R,rot){ctx.beginPath();for(let i=0;i<n;i++){const a=rot+i*2*Math.PI/n-Math.PI/2;const x=Math.cos(a)*R,y=Math.sin(a)*R;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}
+function drawCirc(){
+  const c=circ,T=2.9;if(c.t>T){circ=null;return}
+  const e=Math.min(1,c.t/.5),sc=1+2.7*Math.pow(e-1,3)+1.7*Math.pow(e-1,2);
+  const al=Math.min(1,(T-c.t)/.7);
+  const R=Math.min(cw,ch)*.36*sc;
+  ctx.save();ctx.translate(cx,cy);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=al*.9;ctx.lineWidth=2;
+  ctx.shadowBlur=12;
+  const A=ATTR[c.a],B=ATTR[c.b];
+  ctx.strokeStyle=B.c;ctx.shadowColor=B.c;ctx.beginPath();ctx.arc(0,0,R,0,7);ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,R*.92,0,7);ctx.globalAlpha=al*.4;ctx.stroke();ctx.globalAlpha=al*.9;
+  poly(c.b+2,R*.92,c.t*.8);ctx.stroke();
+  ctx.strokeStyle=A.c;ctx.shadowColor=A.c;poly(c.a+2,R*.66,-c.t*1.2);ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,R*.3,0,7);ctx.stroke();
+  ctx.fillStyle='#fff';
+  for(let i=0;i<c.b+2;i++){const a=c.t*.8+i*2*Math.PI/(c.b+2)-Math.PI/2;ctx.beginPath();ctx.arc(Math.cos(a)*R*.92,Math.sin(a)*R*.92,3,0,7);ctx.fill()}
+  ctx.restore();
+}
+let last=0,acc={h:0,v:0};
+function frame(ts){
+  const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+  ctx.clearRect(0,0,cw,ch);
+  if(emit){
+    emit.t+=dt;
+    if(emit.t<1.8){acc.h+=dt*75;acc.v+=dt*75;while(acc.h>=1){spawn(emit.a,'h');acc.h--}while(acc.v>=1){spawn(emit.b,'v');acc.v--}}
+    else if(emit.t>3.2)emit=null;
+  }
+  if(circ){circ.t+=dt;drawCirc()}
+  for(let i=rings.length-1;i>=0;i--){
+    const r=rings[i];r.t+=dt;const k=(r.t-r.d)/.9;
+    if(k>=1){rings.splice(i,1);continue}
+    if(k<0)continue;
+    ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(1-k)*.9;ctx.strokeStyle=r.col;ctx.lineWidth=6*(1-k)+1;ctx.shadowColor=r.col;ctx.shadowBlur=16;
+    ctx.beginPath();ctx.arc(cx,cy,k*Math.max(cw,ch)*.7,0,7);ctx.stroke();ctx.restore();
+  }
+  for(let i=P.length-1;i>=0;i--){const p=P[i];updP(p,dt);if(p.t>=p.life||p.x>cw+60||p.y>ch+60||p.x<-80||p.y<-80){P.splice(i,1)}else drawP(p)}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ========== 魔法発動 ========== */
+function setBg(a,b){bg1.style.backgroundColor=a?hexA(ATTR[a].c,.5):'#1a0f3d';bg2.style.backgroundColor=b?hexA(ATTR[b].c,.5):'transparent'}
+function cast(a,b,preview){
+  casting=true;
+  const r=eqEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;
+  if(preview){cx=cw/2;cy=ch*.4}
+  setBg(a,b);acc={h:0,v:0};emit={a,b,t:0};circ={a,b,t:0};P=P.filter(p=>false);
+  chime(a,b);
+  if(a===b){burst(a,150);rings=[{t:0,d:0,col:ATTR[a].c},{t:0,d:.18,col:'#fff'},{t:0,d:.36,col:ATTR[a].c2}];setTimeout(()=>burst(a,110),500)}
+  const nm=`${ATTR[a].l} ${ATTR[b].l}`;
+  spellEl.innerHTML=`<b style="color:${ATTR[a].c2}">${nm}</b><small>${ATTR[a].n} × ${ATTR[b].n} の魔法${a===b?'　✦ きらめき！':''}</small>`;
+  spellEl.classList.remove('show');void spellEl.offsetWidth;spellEl.classList.add('show');
+  if(!preview){say(`魔法発動！ ${a} × ${b} = ${a*b}`);}
+  seen[a+'x'+b]=1;saveSeen();updCnt();
+  setTimeout(()=>{
+    casting=false;setBg(0,0);
+    if(preview){return}
+    if(tutorial){tutorial=false;say('すごい、これが魔法！ここからが本番だよ。画面の式を英語で唱えてね。')}
+    else{say(['いいね！次はどんな魔法かな？','その調子！','きれい…！もう一回いこう！','上手に唱えられたね！'][Math.floor(Math.random()*4)])}
+    startQuestion();
+  },3000);
+}
+
+/* ========== 図鑑 ========== */
+const zk=$('zukan'),grid=$('grid');
+function buildGrid(){
+  grid.innerHTML='';
+  const c0=document.createElement('div');c0.className='hd';c0.textContent='前＼後';c0.style.fontSize='9px';grid.appendChild(c0);
+  for(let b=1;b<=9;b++){const d=document.createElement('div');d.className='hd';d.textContent=b;d.style.color=ATTR[b].c;grid.appendChild(d)}
+  for(let a=1;a<=9;a++){
+    const h=document.createElement('div');h.className='hd';h.textContent=a;h.style.color=ATTR[a].c;grid.appendChild(h);
+    for(let b=1;b<=9;b++){
+      const bt=document.createElement('button');
+      bt.style.background=`linear-gradient(90deg,${hexA(ATTR[a].c,.8)} 0 50%,${hexA(ATTR[b].c,.8)} 50% 100%)`;
+      if(ATTR[a].c==='#fff2a8'||ATTR[b].c==='#fff2a8')bt.style.textShadow='0 1px 3px #000';
+      bt.textContent=`${a}×${b}`;if(seen[a+'x'+b])bt.className='done';
+      bt.onclick=()=>{if(casting)return;zk.classList.add('hide');cast(a,b,true)};
+      grid.appendChild(bt);
+    }
+  }
+}
+$('zukanBtn').onclick=()=>{buildGrid();zk.classList.remove('hide')};
+$('zClose').onclick=()=>zk.classList.add('hide');
+
+/* ========== 起動 ========== */
+updCnt();showTut();
+</script>
+</body>
+</html>
