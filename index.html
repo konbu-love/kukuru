@@ -22,7 +22,11 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 #eq{font-size:clamp(56px,17vw,92px);font-weight:800;letter-spacing:.04em;text-shadow:0 0 22px rgba(255,255,255,.35);line-height:1.1}
 #axis{font-size:12px;opacity:.75;margin-top:4px;min-height:16px}
 #hintBtn{margin-top:14px;background:rgba(255,255,255,.1);padding:6px 14px;border-radius:99px;font-size:13px}
-#hint{margin-top:8px;font-size:15px;min-height:22px;color:#ffe9a8}
+#hint{margin-top:8px;font-size:17px;min-height:22px;color:#ffe9a8;line-height:1.5}
+#hint small{display:block;font-size:12px;opacity:.7}
+#ears{display:flex;gap:4px;background:rgba(255,255,255,.08);padding:4px;border-radius:99px}
+#ears button{flex:1;padding:7px;border-radius:99px;font-size:13px;background:none;opacity:.6}
+#ears button.on{background:rgba(255,255,255,.24);opacity:1;font-weight:700}
 #witch{display:flex;gap:10px;align-items:flex-end;margin-bottom:10px}
 #face{font-size:46px;line-height:1}
 #bubble{flex:1;background:rgba(255,255,255,.14);border-radius:16px 16px 16px 4px;padding:10px 13px;font-size:15px;line-height:1.5;min-height:52px;backdrop-filter:blur(4px)}
@@ -58,13 +62,13 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <main id="ui">
   <header>
-    <h1>九九る<span>Magician</span></h1>
+    <h1>九九る<span>Magician</span><span style="font-size:10px;opacity:.5">v3</span></h1>
     <button class="chip" id="zukanBtn">図鑑 <span id="cnt">0/81</span></button>
   </header>
   <section id="stage">
     <div id="eq">? × ?</div>
     <div id="axis"></div>
-    <button id="hintBtn" class="hide">英語のヒント</button>
+    <button id="hintBtn" class="hide">読み方のヒント</button>
     <div id="hint"></div>
   </section>
   <div id="witch">
@@ -72,9 +76,10 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
     <div id="bubble"></div>
   </div>
   <div id="controls" class="hide">
+    <div id="ears"><button type="button" id="earJa">👂 カタカナ耳</button><button type="button" id="earEn">👂 英語耳</button></div>
     <button id="mic">🎙 呪文を唱える</button>
     <form id="typeForm">
-      <input id="typeIn" placeholder="マイクが使えない時はここ (two times nine is eighteen)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="typeIn" placeholder="マイクが使えない時はここ（2 9 18 でもOK）" autocomplete="off" autocapitalize="off" spellcheck="false">
       <button type="submit">唱える</button>
     </form>
     <div id="heard"></div>
@@ -155,6 +160,60 @@ function fuzzyOk(alts,a,b){
 }
 function matches(list,target){let i=0;for(const n of list){if(n===target[i])i++;if(i===target.length)return true}return false}
 
+/* ========== カタカナ耳(日本語認識)用の判定 ========== */
+const KD={1:'ワン',2:'ツー',3:'スリー',4:'フォー',5:'ファイブ',6:'シックス',7:'セブン',8:'エイト',9:'ナイン',10:'テン',11:'イレブン',12:'トゥエルブ',13:'サーティーン',14:'フォーティーン',15:'フィフティーン',16:'シックスティーン',17:'セブンティーン',18:'エイティーン',19:'ナインティーン',20:'トゥエンティ',30:'サーティ',40:'フォーティ',50:'フィフティ',60:'シックスティ',70:'セブンティ',80:'エイティ',90:'ナインティ'};
+function kanaNum(n){if(KD[n])return KD[n];const t=Math.floor(n/10)*10,o=n%10;return (KD[t]||'')+(KD[o]||'')}
+const kanaPhrase=(a,b)=>`${kanaNum(a)} タイムズ ${kanaNum(b)} イズ ${kanaNum(a*b)}`;
+function kfix(s){return s.replace(/ヴ/g,'ブ').replace(/トゥ/g,'ツ').replace(/ティー/g,'ティ')}
+const JVAR={1:['ワン'],2:['ツー','ツウ'],3:['スリー','スリ','ツリー'],4:['フォー','フォア','フォウ','ホー'],5:['ファイブ','ファイフ'],6:['シックス','シクス','セックス'],7:['セブン','セベン'],8:['エイト','エート','エイツ'],9:['ナイン'],10:['テン'],11:['イレブン'],12:['トゥエルブ','トエルブ','トウェルブ'],13:['サーティーン'],14:['フォーティーン'],15:['フィフティーン'],16:['シックスティーン'],17:['セブンティーン'],18:['エイティーン','エイチーン'],19:['ナインティーン'],20:['トゥエンティ','トエンティ','トウェンティ','ツウェンティ'],30:['サーティ','サーチー'],40:['フォーティ'],50:['フィフティ'],60:['シックスティ'],70:['セブンティ'],80:['エイティ'],90:['ナインティ']};
+const JDICT=[];for(const n in JVAR)for(const v of JVAR[n])JDICT.push([kfix(v),+n]);
+JDICT.sort((x,y)=>y[0].length-x[0].length);
+const HOMO=[['通','ツー'],['湾','ワン'],['椀','ワン'],['伊豆','イズ'],['点','テン'],['天','テン'],['×','タイムズ'],['=','イズ']];
+function jaPrep(t){
+  let s=String(t).normalize('NFKC').toLowerCase();
+  s=s.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96));
+  for(const [k,v] of HOMO)s=s.split(k).join(v);
+  s=s.replace(/[a-z]+/g,w=>{
+    if(Object.prototype.hasOwnProperty.call(TENS,w))return ' '+TENS[w]+' ';
+    if(Object.prototype.hasOwnProperty.call(ONES,w))return ' '+ONES[w]+' ';
+    if(w==='times'||w==='time')return 'タイムズ';
+    if(w==='is')return 'イズ';
+    return ' ';});
+  return kfix(s);
+}
+function mergeTens(l){const o=[];for(let i=0;i<l.length;i++){const v=l[i],n=l[i+1];if(v>=20&&v<=90&&v%10===0&&n>=1&&n<=9){o.push(v+n);i++}else o.push(v)}return o}
+function numsJa(t){
+  const s=jaPrep(t);const out=[];let i=0;
+  while(i<s.length){
+    const m=/^\d+/.exec(s.slice(i));
+    if(m){out.push(+m[0]);i+=m[0].length;continue}
+    let hit=false;
+    for(const [k,n] of JDICT){if(s.startsWith(k,i)){out.push(n);i+=k.length;hit=true;break}}
+    if(!hit)i++;
+  }
+  return mergeTens(out);
+}
+function jaCanon(t){
+  let s=jaPrep(t).replace(/\d+/g,d=>{const n=+d;return n<=99&&n>0?kfix(kanaNum(n)):d.split('').map(c=>kfix(kanaNum(+c))).join('')});
+  return s.replace(/[^ァ-ヶ]/g,'').replace(/ッ/g,'');
+}
+const JEXP={};for(let x=1;x<=9;x++)for(let y=1;y<=9;y++)JEXP[x+','+y]=jaCanon(kanaPhrase(x,y));
+function jsim(c,e){const m=Math.max(c.length,e.length)||1;return 1-lev(c,e)/m}
+function jaOk(alts,a,b){
+  const target=[a,b,a*b],key=target.join('');
+  for(const t of alts){
+    const L=numsJa(t);
+    if(matches(L,target)||L.join('')===key)return true;
+    if(L.length>=3)continue;
+    const c=jaCanon(t);if(c.length<4||c.length<JEXP[a+','+b].length-2)continue; /* 答えまで言っていない時は通さない */
+    const cur=jsim(c,JEXP[a+','+b]);if(cur<.7)continue;
+    let best=true;
+    for(const k in JEXP){if(k!==a+','+b&&jsim(c,JEXP[k])>cur){best=false;break}}
+    if(best)return true;
+  }
+  return false;
+}
+
 /* ========== 要素 ========== */
 const $=id=>document.getElementById(id);
 const bg1=$('bg1'),bg2=$('bg2'),eqEl=$('eq'),axisEl=$('axis'),hintEl=$('hint'),hintBtn=$('hintBtn');
@@ -174,9 +233,9 @@ function updCnt(){$('cnt').textContent=Object.keys(seen).length+'/81'}
 /* ========== チュートリアル ========== */
 const TUT=[
  'ようこそ、魔法学園へ！わたしは見習い魔女。いっしょに「英語の九九」を呪文にして魔法を使おう。',
- '画面に出た掛け算を、英語で唱えてね。たとえば「two times three is six」みたいに。',
- '発音は採点しないよ。聞き取れたら魔法が発動！ダメなら「もう一回！」。式の左の数字は背景の色、右の数字は上から降る魔法を決めるよ。',
- 'じゃあ練習。マイクに向かって「two times three is six」と唱えてみて！'
+ '画面に出た掛け算を、英語で唱えてね。たとえば「ツー タイムズ スリー イズ シックス」みたいに。',
+ '発音は気にしないで！「カタカナ耳」ならカタカナ発音のまま通るよ。ダメなら「もう一回！」。式の左の数字は背景の色、右の数字は上から降る魔法を決めるよ。',
+ 'じゃあ練習。マイクに向かって「ツー タイムズ スリー イズ シックス」と唱えてみて！'
 ];
 function showTut(){
   say(TUT[tutStep]);
@@ -193,30 +252,43 @@ function startQuestion(fixed){
   lastKey=a+','+b;Q={a,b,ans:a*b};
   eqEl.innerHTML=`<span style="color:${ATTR[a].c}">${a}</span> × <span style="color:${ATTR[b].c}">${b}</span>`;
   axisEl.textContent=`左から${ATTR[a].n} ／ 上から${ATTR[b].n}`;
-  const phrase=`${words(a)} times ${words(b)} is ${words(a*b)}`;
-  Q.phrase=phrase;
+  Q.phrase=`${words(a)} times ${words(b)} is ${words(a*b)}`;
+  Q.kana=kanaPhrase(a,b);
   hintBtn.classList.remove('hide');hintEl.textContent='';
-  if(fixed)hintEl.textContent=phrase;
+  if(fixed)showHint();
   heardEl.textContent='';typeIn.value='';fails=0;forceBtn.classList.add('hide');
 }
 forceBtn.onclick=()=>{if(!casting&&Q)cast(Q.a,Q.b,false)};
-hintBtn.onclick=()=>{hintEl.textContent=Q?Q.phrase:''};
+function showHint(){if(!Q)return;hintEl.innerHTML=`${Q.kana}<small>${Q.phrase}</small>`}
+hintBtn.onclick=showHint;
 
 /* ========== 判定 ========== */
-function handle(alts){
+function handle(alts,typed){
   if(casting||!Q)return;
-  heardEl.textContent='聞こえた: '+(alts[0]||'');
+  heardEl.textContent='聞こえた: '+alts.slice(0,3).join(' / ');
   const target=[Q.a,Q.b,Q.ans];
-  const ok=alts.some(t=>matches(nums(t),target))||fuzzyOk(alts,Q.a,Q.b);
+  const enOk=()=>alts.some(t=>matches(nums(t),target))||fuzzyOk(alts,Q.a,Q.b);
+  const ok=typed?(jaOk(alts,Q.a,Q.b)||enOk()):(ear==='ja'?jaOk(alts,Q.a,Q.b):enOk());
   if(ok){cast(Q.a,Q.b,false)}
   else{
     fails++;
-    if(alts.some(t=>nums(t).length))say('ちょっと違うみたい…もう一回！（ヒントを見てもOK）');
-    else say('聞き取れなかった…もう一回！ゆっくり、はっきり、区切って言ってみてね。');
+    const anyNum=alts.some(t=>numsJa(t).length||nums(t).length);
+    if(ear==='en'&&!typed&&fails>=2)say('英語耳だと通りにくいみたい。「カタカナ耳」に切り替えると、カタカナ発音のまま通るよ！');
+    else if(anyNum)say('ちょっと違うみたい…もう一回！（ヒントを見てもOK）');
+    else say('聞き取れなかった…もう一回！ゆっくり、区切って言ってみてね。');
     if(fails>=2)forceBtn.classList.remove('hide');
   }
 }
-$('typeForm').onsubmit=e=>{e.preventDefault();const v=typeIn.value.trim();if(v)handle([v])};
+$('typeForm').onsubmit=e=>{e.preventDefault();const v=typeIn.value.trim();if(v)handle([v],true)};
+
+/* ========== 耳の切り替え ========== */
+let ear='ja';
+try{if(localStorage.getItem('kukuru-ear')==='en')ear='en'}catch(e){}
+function setEar(v){ear=v;try{localStorage.setItem('kukuru-ear',v)}catch(e){}
+  $('earJa').classList.toggle('on',v==='ja');$('earEn').classList.toggle('on',v==='en');}
+$('earJa').onclick=()=>{setEar('ja');say('カタカナ耳にしたよ。カタカナ発音のまま唱えてね。')};
+$('earEn').onclick=()=>{setEar('en');say('英語耳にしたよ。英語っぽい発音で挑戦！')};
+setEar(ear);
 
 /* ========== 音声認識 ========== */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -227,7 +299,7 @@ mic.onclick=()=>{
   if(casting||listening)return;
   if(!SR){micFallback('このブラウザは音声認識に対応してないみたい。下の入力欄に英語で打つか、キーボードの🎤で話してね。');return}
   try{rec=new SR()}catch(e){micFallback('音声認識を始められなかった。下の入力欄を使ってね。');return}
-  rec.lang='en-US';rec.interimResults=false;rec.maxAlternatives=10;rec.continuous=false;
+  rec.lang=ear==='ja'?'ja-JP':'en-US';rec.interimResults=false;rec.maxAlternatives=10;rec.continuous=false;
   rec.onstart=()=>{listening=true;mic.classList.add('on');mic.textContent='🎧 聞いてるよ…'};
   rec.onresult=e=>{const r=e.results[0];const alts=[];for(let i=0;i<r.length;i++)alts.push(r[i].transcript);handle(alts)};
   rec.onerror=e=>{
