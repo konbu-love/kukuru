@@ -78,6 +78,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <button type="submit">唱える</button>
     </form>
     <div id="heard"></div>
+    <button id="forceBtn" class="chip hide">うまく通じない時は、この魔法を発動する</button>
   </div>
   <div id="tutCtl" style="text-align:center">
     <button id="nextBtn" style="width:100%">つぎへ</button>
@@ -127,19 +128,44 @@ function nums(text){
   }
   return out;
 }
+/* 音の近さで判定(日本語訛りで別の英文に聞こえても拾う) */
+function skel(s){
+  s=String(s).toLowerCase().replace(/[^a-z0-9 ]/g,' ');
+  s=s.replace(/\d+/g,m=>words(+m)||m).replace(/-/g,' ');
+  s=s.replace(/\b(is|are|equals?|equal|the|a|it|and)\b/g,' ');
+  s=s.replace(/ph/g,'f').replace(/ck/g,'k').replace(/th/g,'t').replace(/kn/g,'n').replace(/wr/g,'r').replace(/x/g,'ks');
+  s=s.replace(/[^a-z]/g,'');
+  const map={b:'P',p:'P',d:'T',t:'T',g:'K',k:'K',c:'K',q:'K',f:'F',v:'F',s:'S',z:'S',j:'S',m:'N',n:'N',l:'L',r:'L'};
+  let o='';for(const ch of s){const m=map[ch];if(m&&o[o.length-1]!==m)o+=m}
+  return o;
+}
+function lev(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+function sim(h,p){const a=skel(h),b=skel(p);const m=Math.max(a.length,b.length)||1;return 1-lev(a,b)/m}
+const phraseOf=(a,b)=>`${words(a)} times ${words(b)} is ${words(a*b)}`;
+function fuzzyOk(alts,a,b){
+  for(const h of alts){
+    if(nums(h).length>=3)continue; /* 数字が3つ聞き取れて不一致なら、本当に間違い */
+    const cur=sim(h,phraseOf(a,b));
+    if(cur<.7)continue;
+    let best=true;
+    for(let x=1;x<=9&&best;x++)for(let y=1;y<=9;y++){if((x!==a||y!==b)&&sim(h,phraseOf(x,y))>cur){best=false;break}}
+    if(best)return true;
+  }
+  return false;
+}
 function matches(list,target){let i=0;for(const n of list){if(n===target[i])i++;if(i===target.length)return true}return false}
 
 /* ========== 要素 ========== */
 const $=id=>document.getElementById(id);
 const bg1=$('bg1'),bg2=$('bg2'),eqEl=$('eq'),axisEl=$('axis'),hintEl=$('hint'),hintBtn=$('hintBtn');
 const bubble=$('bubble'),controls=$('controls'),tutCtl=$('tutCtl'),mic=$('mic'),heardEl=$('heard');
-const spellEl=$('spell'),typeIn=$('typeIn');
+const spellEl=$('spell'),typeIn=$('typeIn'),forceBtn=$('forceBtn');
 function hexA(h,a){const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}
 const rnd=(a,b)=>a+Math.random()*(b-a);
 function say(t){bubble.textContent=t}
 
 /* ========== 状態 ========== */
-let Q=null,casting=false,lastKey='',tutStep=0,tutorial=true;
+let fails=0;let Q=null,casting=false,lastKey='',tutStep=0,tutorial=true;
 let seen={};
 try{seen=JSON.parse(localStorage.getItem('kukuru-seen')||'{}')||{}}catch(e){seen={}}
 function saveSeen(){try{localStorage.setItem('kukuru-seen',JSON.stringify(seen))}catch(e){}}
@@ -150,11 +176,11 @@ const TUT=[
  'ようこそ、魔法学園へ！わたしは見習い魔女。いっしょに「英語の九九」を呪文にして魔法を使おう。',
  '画面に出た掛け算を、英語で唱えてね。たとえば「two times three is six」みたいに。',
  '発音は採点しないよ。聞き取れたら魔法が発動！ダメなら「もう一回！」。式の左の数字は背景の色、右の数字は上から降る魔法を決めるよ。',
- 'じゃあ練習。マイクに向かって「one times one is one」と唱えてみて！'
+ 'じゃあ練習。マイクに向かって「two times three is six」と唱えてみて！'
 ];
 function showTut(){
   say(TUT[tutStep]);
-  if(tutStep>=3){tutCtl.classList.add('hide');controls.classList.remove('hide');startQuestion([1,1])}
+  if(tutStep>=3){tutCtl.classList.add('hide');controls.classList.remove('hide');startQuestion([2,3])}
 }
 $('nextBtn').onclick=()=>{tutStep++;showTut()};
 $('skip').onclick=()=>{tutorial=false;tutCtl.classList.add('hide');controls.classList.remove('hide');say('それじゃ本番！画面の式を英語で唱えてね。');startQuestion()};
@@ -171,8 +197,9 @@ function startQuestion(fixed){
   Q.phrase=phrase;
   hintBtn.classList.remove('hide');hintEl.textContent='';
   if(fixed)hintEl.textContent=phrase;
-  heardEl.textContent='';typeIn.value='';
+  heardEl.textContent='';typeIn.value='';fails=0;forceBtn.classList.add('hide');
 }
+forceBtn.onclick=()=>{if(!casting&&Q)cast(Q.a,Q.b,false)};
 hintBtn.onclick=()=>{hintEl.textContent=Q?Q.phrase:''};
 
 /* ========== 判定 ========== */
@@ -180,10 +207,14 @@ function handle(alts){
   if(casting||!Q)return;
   heardEl.textContent='聞こえた: '+(alts[0]||'');
   const target=[Q.a,Q.b,Q.ans];
-  const ok=alts.some(t=>matches(nums(t),target));
+  const ok=alts.some(t=>matches(nums(t),target))||fuzzyOk(alts,Q.a,Q.b);
   if(ok){cast(Q.a,Q.b,false)}
-  else if(alts.some(t=>nums(t).length)){say('ちょっと違うみたい…もう一回！（ヒントを見てもOK）')}
-  else{say('聞き取れなかった…もう一回！')}
+  else{
+    fails++;
+    if(alts.some(t=>nums(t).length))say('ちょっと違うみたい…もう一回！（ヒントを見てもOK）');
+    else say('聞き取れなかった…もう一回！ゆっくり、はっきり、区切って言ってみてね。');
+    if(fails>=2)forceBtn.classList.remove('hide');
+  }
 }
 $('typeForm').onsubmit=e=>{e.preventDefault();const v=typeIn.value.trim();if(v)handle([v])};
 
@@ -196,7 +227,7 @@ mic.onclick=()=>{
   if(casting||listening)return;
   if(!SR){micFallback('このブラウザは音声認識に対応してないみたい。下の入力欄に英語で打つか、キーボードの🎤で話してね。');return}
   try{rec=new SR()}catch(e){micFallback('音声認識を始められなかった。下の入力欄を使ってね。');return}
-  rec.lang='en-US';rec.interimResults=false;rec.maxAlternatives=5;rec.continuous=false;
+  rec.lang='en-US';rec.interimResults=false;rec.maxAlternatives=10;rec.continuous=false;
   rec.onstart=()=>{listening=true;mic.classList.add('on');mic.textContent='🎧 聞いてるよ…'};
   rec.onresult=e=>{const r=e.results[0];const alts=[];for(let i=0;i<r.length;i++)alts.push(r[i].transcript);handle(alts)};
   rec.onerror=e=>{
