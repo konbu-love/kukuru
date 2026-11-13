@@ -21,7 +21,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 #stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;text-align:center}
 #eq{font-size:clamp(56px,17vw,92px);font-weight:800;letter-spacing:.04em;text-shadow:0 0 22px rgba(255,255,255,.35);line-height:1.1}
 #axis{font-size:12px;opacity:.75;margin-top:4px;min-height:16px}
-#hintBtn{margin-top:14px;background:rgba(255,255,255,.1);padding:6px 14px;border-radius:99px;font-size:13px}
+#hintRow{display:flex;gap:8px;margin-top:14px}
+#hintBtn,#speakBtn{background:rgba(255,255,255,.1);padding:6px 14px;border-radius:99px;font-size:13px}
 #hint{margin-top:8px;font-size:17px;min-height:22px;color:#ffe9a8;line-height:1.5;white-space:nowrap}
 #hint:not(:empty){background:rgba(10,5,30,.5);padding:4px 10px;border-radius:12px}
 #hint small{display:block;font-size:12px;opacity:.7}
@@ -57,6 +58,33 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 #cutin .w{position:absolute;right:3%;bottom:0;height:100%;aspect-ratio:225/250;transform:translateX(170%);filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
 #cutin.show .w{animation:witchIn 1.9s cubic-bezier(.2,.9,.3,1) forwards}
 @keyframes witchIn{0%{transform:translateX(170%) rotate(8deg)}14%{transform:translateX(-6%) rotate(-4deg)}22%{transform:translateX(0) rotate(0)}50%{transform:translateY(-4%)}78%{transform:translateX(0)}100%{transform:translateX(-460%) rotate(-10deg)}}
+#modeRow{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12px}
+#modeLbl{opacity:.75}
+#danSel{position:fixed;inset:0;z-index:40;background:rgba(8,4,24,.95);padding:max(14px,env(safe-area-inset-top)) 14px 14px;overflow:auto}
+#danSel .top{display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:0 auto 6px;font-size:18px}
+#danSel p{max-width:520px;margin:0 auto 10px;font-size:12px;opacity:.75;line-height:1.5}
+#ord{display:flex;gap:4px;background:rgba(255,255,255,.08);padding:4px;border-radius:99px;max-width:520px;margin:0 auto 10px}
+#ord button{flex:1;padding:8px;border-radius:99px;font-size:14px;background:none;opacity:.6}
+#ord button.on{background:rgba(255,255,255,.24);opacity:1;font-weight:700}
+#danGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:520px;margin:0 auto}
+#danGrid button,#trialGrid button{border-radius:14px;padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+#danGrid b,#trialGrid b{font-size:18px}#danGrid small,#trialGrid small{font-size:12px}#danGrid i,#trialGrid i{font-style:normal;font-size:14px;color:#fff6b0;letter-spacing:.2em}
+.sec{max-width:520px;margin:14px auto 4px;font-size:14px;color:#ffe9a8}
+#trialGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:520px;margin:0 auto}
+#trialGrid button{background:#1e2248;border:2px solid #f2cf7a}
+#grid button.yet{opacity:.5;font-size:12px}
+#detail{position:fixed;inset:0;z-index:45;background:rgba(5,2,18,.78);display:flex;align-items:center;justify-content:center;padding:16px}
+#detail .card{background:#1b1440;border:2px solid #f2cf7a;border-radius:18px;padding:16px;width:100%;max-width:380px;text-align:center}
+#dTop{display:flex;gap:10px;align-items:flex-end;text-align:left}
+#dFace{width:88px;flex:none;line-height:0}
+#dSay{flex:1;background:rgba(255,255,255,.12);border-radius:14px 14px 14px 4px;padding:9px 11px;font-size:14px;line-height:1.5}
+#dEq{font-size:38px;font-weight:800;margin:12px 0 4px}
+#dKana{font-size:15px;color:#ffe9a8;line-height:1.6;min-height:24px}
+#dKana small{font-size:12px;color:#f4eeff;opacity:.75}
+#dBtns{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+#dBtns button{padding:12px;border-radius:14px;font-size:15px;background:rgba(255,255,255,.14)}
+#dBtns button.main{background:linear-gradient(135deg,#8a5cff,#ff5cb0);font-weight:700}
+#danFree{display:block;width:100%;max-width:520px;margin:12px auto 0;background:rgba(255,255,255,.14);padding:13px;border-radius:14px;font-size:15px}
 #zukan{position:fixed;inset:0;z-index:40;background:rgba(8,4,24,.94);padding:max(14px,env(safe-area-inset-top)) 12px 14px;overflow:auto}
 #zukan .top{display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:0 auto 6px}
 #zukan p{max-width:520px;margin:0 auto 8px;font-size:12px;opacity:.75;line-height:1.5}
@@ -73,13 +101,14 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <main id="ui">
   <header>
-    <h1>九九る<span>Magician</span><span style="font-size:10px;opacity:.5">v4</span></h1>
+    <h1>九九る<span>Magician</span><span style="font-size:10px;opacity:.5">v6</span></h1>
     <div style="display:flex;gap:6px"><button class="chip" id="cutBtn"></button><button class="chip" id="zukanBtn">図鑑 <span id="cnt">0/81</span></button></div>
   </header>
+  <div id="modeRow"><button class="chip" id="danBtn">📖 モード</button><span id="modeLbl"></span></div>
   <section id="stage">
     <div id="eq">? × ?</div>
     <div id="axis"></div>
-    <button id="hintBtn" class="hide">読み方のヒント</button>
+    <div id="hintRow"><button id="hintBtn" class="hide">読み方のヒント</button><button id="speakBtn" class="hide">🔊 お手本</button></div>
     <div id="hint"></div>
   </section>
   <div id="witch">
@@ -105,9 +134,27 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 <div id="cutin"></div>
 <div id="spell"></div>
 
+<div id="danSel" class="hide">
+  <div class="top"><b id="danTitle">モードをえらぶ</b><button class="chip" id="danClose">とじる</button></div>
+  <h3 class="sec">段モード</h3>
+  <p>えらんだ段の9問を唱えきろう。魔女っ子の口調も段ごとに変わるよ。✦＝順番どおりでクリア／★＝ばらばらでクリア</p>
+  <div id="ord"><button type="button" id="ordSeq">順番どおり</button><button type="button" id="ordRand">ばらばら</button></div>
+  <div id="danGrid"></div>
+  <h3 class="sec">大魔女の試練（上級）</h3>
+  <p>大魔女が出す9問。✦＝突破／★＝一度も降参せずに突破</p>
+  <div id="trialGrid"><button id="trial1"></button><button id="trial2"></button></div>
+  <button id="danFree">フリーモード（ぜんぶランダム）</button>
+</div>
+
+<div id="detail" class="hide"><div class="card">
+  <div id="dTop"><div id="dFace"></div><div id="dSay"></div></div>
+  <div id="dEq"></div><div id="dKana"></div><div id="dBtns"></div>
+  <button class="chip" id="dClose">とじる</button>
+</div></div>
+
 <div id="zukan" class="hide">
   <div class="top"><b>魔法図鑑</b><button class="chip" id="zClose">とじる</button></div>
-  <p>よこ＝×の前の数字（背景色・左から）／たて＝×の後の数字（上から）。タップすると81通りの魔法を見られます。✦は唱えたことがある魔法。</p>
+  <p>よこ＝×の前の数字（背景色・左から）／たて＝×の後の数字（上から）。✦は唱えたことがある魔法。数字だけのマスは、まだ見ぬ魔法（その数を作る呪文を探そう）。タップで復習・挑戦できます。</p>
   <div id="grid"></div>
 </div>
 
@@ -257,21 +304,51 @@ $('nextBtn').onclick=()=>{tutStep++;showTut()};
 $('skip').onclick=()=>{tutorial=false;tutCtl.classList.add('hide');controls.classList.remove('hide');say('それじゃ本番！画面の式を英語で唱えてね。');startQuestion()};
 
 /* ========== 出題 ========== */
-function startQuestion(fixed){
-  let a,b;
+function renderEq(reveal){
+  if(!Q)return;const a=Q.a,b=Q.b,h=reveal?'':Q.hide;
+  const A=`<span style="color:${ATTR[a].c}">${a}</span>`,B=`<span style="color:${ATTR[b].c}">${b}</span>`,X='<span>？</span>';
+  if(!h){eqEl.innerHTML=`${A} × ${B}`;return}
+  const body=`${h==='b'?A:X} × ${h==='a'?B:X}`;
+  eqEl.innerHTML=Q.showAns?`<span style="font-size:.66em">${body} = ${Q.ans}</span>`:body;
+}
+function startQuestion(fixed,opt){
+  opt=opt||{};let a,b;
   if(fixed){[a,b]=fixed}
+  else if(dan){a=dan;b=danList[danIdx]}
   else{do{a=1+Math.floor(Math.random()*9);b=1+Math.floor(Math.random()*9)}while(a+','+b===lastKey)}
-  lastKey=a+','+b;Q={a,b,ans:a*b};
-  eqEl.innerHTML=`<span style="color:${ATTR[a].c}">${a}</span> × <span style="color:${ATTR[b].c}">${b}</span>`;
-  axisEl.textContent=`左から${ATTR[a].n} ／ 上から${ATTR[b].n}`;
+  lastKey=a+','+b;Q={a,b,ans:a*b,side:!!opt.side};
+  Q.hide=opt.hide||(fixed?'':trial===1?(Math.random()<.5?'a':'b'):trial===2?'both':'');
+  Q.showAns=!!Q.hide&&(!!opt.hide||trial===1);
+  setBg(0,0);renderEq();
+  let ax=`左から${ATTR[a].n} ／ 上から${ATTR[b].n}`;
+  if(dan&&!fixed)ax=`【${dan}の段 ${danIdx+1}/9】 `+ax;
+  if(Q.hide){
+    if(opt.hide)ax='この数を作る呪文を探して、式をまるごと唱えよう';
+    else if(trial===1)ax=`【試練 ${trialIdx+1}/9】 かくれた数字を見抜いて、式をまるごと唱えよ`;
+    else ax=`【試練 ${trialIdx+1}/9】 魔法を見て、もとの式を唱えよ`;
+  }
+  axisEl.textContent=ax;
   Q.phrase=`${words(a)} times ${words(b)} is ${words(a*b)}`;
   Q.kana=kanaPhrase(a,b);idle('open');
   hintBtn.classList.remove('hide');hintEl.textContent='';
-  if(fixed)showHint();
+  hintBtn.textContent=Q.hide?(Q.showAns?'ヒント':'✨ 魔法をもう一度見る'):'読み方のヒント';
+  speakBtn.classList.toggle('hide',!!Q.hide);
+  if(fixed&&!Q.hide)showHint();
+  if(Q.hide&&!Q.showAns)showMagic(a,b);
   heardEl.textContent='';typeIn.value='';fails=0;forceBtn.classList.add('hide');
+  forceBtn.textContent=Q.hide?'降参して答えを見る':'うまく通じない時は、この魔法を発動する';
 }
-forceBtn.onclick=()=>{if(!casting&&Q)cast(Q.a,Q.b,false)};
-function showHint(){if(!Q)return;hintEl.style.fontSize=Math.min(17,Math.floor((Math.min(window.innerWidth,520)-52)/Q.kana.length))+'px';hintEl.innerHTML=`${Q.kana}<small>${Q.phrase}</small>`}
+forceBtn.onclick=()=>{if(!casting&&Q){if(trial)trialMiss=true;cast(Q.a,Q.b,false)}};
+function showHint(){
+  if(!Q)return;
+  if(Q.hide){
+    if(!Q.showAns){showMagic(Q.a,Q.b);return}
+    hintEl.style.fontSize='15px';
+    hintEl.textContent=Q.hide==='both'?`左は「${ATTR[Q.a].n}」、上は「${ATTR[Q.b].n}」の属性`:`かくれた数字は「${ATTR[Q.hide==='a'?Q.a:Q.b].n}」の属性`;
+    return;
+  }
+  hintEl.style.fontSize=Math.min(17,Math.floor((Math.min(window.innerWidth,520)-52)/Q.kana.length))+'px';hintEl.innerHTML=`${Q.kana}<small>${Q.phrase}</small>`;
+}
 hintBtn.onclick=showHint;
 
 /* ========== 判定 ========== */
@@ -288,6 +365,9 @@ function handle(alts,typed){
     if(ear==='en'&&!typed&&fails>=2)say('英語耳だと通りにくいみたい。「カタカナ耳」に切り替えると、カタカナ発音のまま通るよ！');
     else if(anyNum)say('ちょっと違うみたい…もう一回！（ヒントを見てもOK）');
     else say('聞き取れなかった…もう一回！ゆっくり、区切って言ってみてね。');
+    if(dan&&!(ear==='en'&&!typed&&fails>=2))say(PERS[dan].fail);
+    if(Q.hide==='both'&&Q.showAns&&sameProduct(alts))say(GP.other);
+    else if(trial&&!(ear==='en'&&!typed&&fails>=2))say(trial===2&&fails>=2?`ヒントじゃ。左は「${ATTR[Q.a].n}」、上は「${ATTR[Q.b].n}」の属性じゃ。`:GP.fail);
     if(fails>=2)forceBtn.classList.remove('hide');
   }
 }
@@ -429,6 +509,59 @@ function frame(ts){
 }
 requestAnimationFrame(frame);
 
+let trial=0,trialIdx=0,trialMiss=false,trialDone={};
+/* ========== 段モード ========== */
+let dan=0,danOrder='seq',danList=[],danIdx=0,danDone={};
+try{danDone=JSON.parse(localStorage.getItem('kukuru-dan')||'{}')||{}}catch(e){danDone={}}
+const pick=l=>l[Math.floor(Math.random()*l.length)];
+const PERS=[null,
+{start:'1の段、燃えていくぞー！',ok:['いいぞ！その調子だ！','燃えてきたー！','ナイス詠唱！'],fail:'まだまだ！もう一回だ！',clear:'1の段、完全燃焼！おつかれ！'},
+{start:'2の段。…静かに始めましょう。',ok:['…悪くないわ。','その調子。','きれいな詠唱ね。'],fail:'…落ち着いて、もう一回。',clear:'2の段、クリア。…見事ね。'},
+{start:'3の段！さくさく行くよ、ビリッと！',ok:['はやっ！いいね！','ビリビリきた！','次つぎ！'],fail:'おしい！すぐもう一回！',clear:'3の段クリア！電光石火だったね！'},
+{start:'4の段だよ〜。風まかせでいこ〜。',ok:['いい風〜。','ふわっと決まったね〜。','その調子〜。'],fail:'だいじょぶ〜、もう一回〜。',clear:'4の段クリア〜。きもちいい風だったね〜。'},
+{start:'5の段です。ゆったり参りましょう。',ok:['お上手です。','澄んだ詠唱ですね。','その調子です。'],fail:'あらあら、もう一度どうぞ。',clear:'5の段、クリアです。お見事でした。'},
+{start:'6の段だよ。森のみんなも聞いてるよ。',ok:['芽が出たよ！','小鳥もよろこんでる！','いい声だね！'],fail:'だいじょうぶ、もう一回言ってみよ。',clear:'6の段クリア！森じゅうが拍手してるよ！'},
+{start:'7の段ですわ。優雅に参りますわよ。',ok:['お見事ですわ！','美しい詠唱ですこと。','その調子ですわ。'],fail:'あら、もう一度ですわ。',clear:'7の段クリアですわ！薔薇の花束をどうぞ。'},
+{start:'8の段だよ！キラキラいこー！',ok:['まぶしいっ！','キラッと決まった！','すごいすごい！'],fail:'ドンマイ！もう一回！',clear:'8の段クリア！かがやいてたよ！'},
+{start:'9の段…ククク、闇の力を解き放つ時が来た。',ok:['フッ…見事だ。','闇が応えている…！','その詠唱、悪くない。'],fail:'…闇はまだ応えぬ。もう一度だ。',clear:'9の段、制覇…。我らの闇は完成した。'}];
+const danSel=$('danSel'),danGrid=$('danGrid');
+function modeLabel(){$('modeLbl').textContent=trial?`いま：大魔女の試練（${trial===1?'数あて':'魔法あて'}）`:dan?`いま：${dan}の段（${danOrder==='seq'?'順番どおり':'ばらばら'}）`:'いま：フリー（ぜんぶランダム）'}
+function setOrder(v){danOrder=v;$('ordSeq').classList.toggle('on',v==='seq');$('ordRand').classList.toggle('on',v==='rand')}
+function openDan(title){
+  $('danTitle').textContent=title||'モードをえらぶ';
+  danGrid.innerHTML='';
+  for(let d=1;d<=9;d++){
+    const bt=document.createElement('button');
+    bt.style.background=hexA(CLOTH[d],.85);
+    bt.innerHTML=`<b>${d}の段</b><small>${ATTR[d].n}</small><i>${danDone[d+'s']?'✦':'・'}${danDone[d+'r']?'★':'・'}</i>`;
+    bt.onclick=()=>startDan(d);
+    danGrid.appendChild(bt);
+  }
+  setOrder(danOrder);trialMarks();danSel.classList.remove('hide');
+}
+function enterPlay(){tutorial=false;tutCtl.classList.add('hide');controls.classList.remove('hide');danSel.classList.add('hide')}
+function startDan(d){
+  if(casting)return;
+  trial=0;dan=d;danIdx=0;danList=[1,2,3,4,5,6,7,8,9];
+  if(danOrder==='rand'){for(let i=8;i>0;i--){const j=Math.floor(Math.random()*(i+1));[danList[i],danList[j]]=[danList[j],danList[i]]}}
+  enterPlay();modeLabel();say(PERS[d].start);startQuestion();
+}
+function startFree(){if(casting)return;dan=0;trial=0;enterPlay();modeLabel();say('フリーモードだよ。どの式が出るかはおたのしみ！');startQuestion()}
+function danClear(){
+  const d=dan;danDone[d+(danOrder==='seq'?'s':'r')]=1;
+  try{localStorage.setItem('kukuru-dan',JSON.stringify(danDone))}catch(e){}
+  Q=null;eqEl.innerHTML=`<span style="font-size:.42em">${d}の段 クリア！</span>`;axisEl.textContent='';hintEl.textContent='';hintBtn.classList.add('hide');speakBtn.classList.add('hide');
+  say(PERS[d].clear);idle('happy');
+  cx=cw/2;cy=ch*.38;burst(d,160);rings=[{t:0,d:0,col:ATTR[d].c},{t:0,d:.2,col:'#fff'},{t:0,d:.4,col:ATTR[d].c2}];chime(d,d);
+  if(cutinOn)showCutin(d,d);
+  setTimeout(()=>openDan(`${d}の段 クリア！ つぎは？`),2600);
+}
+$('danBtn').onclick=()=>{if(!casting)openDan()};
+$('danClose').onclick=()=>danSel.classList.add('hide');
+$('danFree').onclick=startFree;
+$('ordSeq').onclick=()=>setOrder('seq');$('ordRand').onclick=()=>setOrder('rand');
+modeLabel();
+
 /* ========== 魔女っ子 ========== */
 const CLOTH=[null,'#d23a1e','#3aa9d6','#d1a90c','#2bb58a','#2a5fd6','#2f9a45','#d62f6c','#f0cf5a','#5a32a8'];
 const EXPR=[null,'fired','open','wow','happy','open','happy','wink','wow','smug'];
@@ -502,17 +635,120 @@ cutBtn.onclick=()=>{setCutin(!cutinOn);say(cutinOn?'わたしも一緒に登場�
 setCutin(cutinOn);
 function showCutin(a,b){
   clearTimeout(cutTimer);
-  cutEl.innerHTML=`<div class="band" style="background:linear-gradient(90deg,${hexA(ATTR[a].c,.85)},${hexA(ATTR[b].c,.85)})"></div><div class="w">${witchSVG(a,b,{special:a===b})}</div>`;
+  cutEl.innerHTML=`<div class="band" style="background:linear-gradient(90deg,${hexA(ATTR[a].c,.85)},${hexA(ATTR[b].c,.85)})"></div><div class="w">${trial?grandSVG("happy"):witchSVG(a,b,{special:a===b})}</div>`;
   cutEl.classList.remove('show');void cutEl.offsetWidth;cutEl.classList.add('show');
   cutTimer=setTimeout(()=>{cutEl.classList.remove('show');cutEl.innerHTML=''},2000);
 }
-function idle(e){$('face').innerHTML=witchSVG(9,8,{expr:e||'open'})}
+function idle(e){const x=e||'open';$('face').innerHTML=trial?grandSVG(x==='sad'?'hmm':x==='happy'?'happy':'calm'):witchSVG(dan||9,dan||8,{expr:x})}
 idle('open');
+
+/* ========== 大魔女 ========== */
+const NAVY='#1e2248',NAVY2='#2f3668',GOLD='#f2cf7a',SILV='#e4e8f2',SILV2='#b7bfd6';
+function gEye(x,flip){return `<path d="M${x-9} 117 A9 8 0 0 0 ${x+9} 117 Z" fill="#4f5f96"/><path d="M${x-10} 117 L${x+10} 117" stroke="${OL}" stroke-width="3.2" stroke-linecap="round"/><path d="M${flip?x-10:x+10} 117 l${flip?-4:4} -4" stroke="${OL}" stroke-width="2.4" stroke-linecap="round"/><circle cx="${x-3}" cy="120" r="1.9" fill="#fff"/>`}
+function grandSVG(e){
+  const s=`stroke="${OL}" stroke-width="3" stroke-linejoin="round"`;
+  const ln=`fill="none" stroke="${OL}" stroke-width="3" stroke-linecap="round"`;
+  const gl=`fill="none" stroke="${GOLD}" stroke-linecap="round"`;
+  let eyes=gEye(80,1)+gEye(120),brow='',mouth=`<path d="M92 135 Q100 141 108 135" ${ln}/>`;
+  if(e==='happy'){eyes=eyeArc(80)+eyeArc(120);mouth=`<path d="M91 134 Q100 146 109 134 Z" fill="#c9506f" stroke="${OL}" stroke-width="2.5" stroke-linejoin="round"/>`}
+  else if(e==='hmm'){brow=`<path d="M71 105 L89 103" ${ln}/><path d="M111 100 Q121 96 131 102" ${ln}/>`;mouth=`<path d="M93 138 Q100 136 107 139" ${ln}/>`}
+  else if(e==='wow'){eyes=eyeOpen(80)+eyeOpen(120);mouth=`<ellipse cx="100" cy="139" rx="5.5" ry="6.5" fill="#c9506f" stroke="${OL}" stroke-width="2.5"/>`}
+  let o=`<svg class="wt" viewBox="0 0 225 250" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">`;
+  /* うしろ髪(ウェーブ) */
+  o+=`<path d="M50 102 Q22 132 40 156 Q24 178 42 196 Q34 214 54 220 Q66 206 62 182 L138 182 Q134 206 146 220 Q166 214 158 196 Q176 178 160 156 Q178 132 150 102 Z" fill="${SILV2}" ${s}/>`;
+  /* マント */
+  o+=`<path d="M68 158 Q28 196 30 232 Q100 248 170 232 Q172 196 132 158 Z" fill="${NAVY2}" ${s}/><path d="M36 227 Q100 241 164 227" ${gl} stroke-width="3"/>`;
+  o+=`<ellipse cx="86" cy="239" rx="14" ry="8" fill="#5a3a22" ${s}/><ellipse cx="114" cy="239" rx="14" ry="8" fill="#5a3a22" ${s}/>`;
+  /* ローブ */
+  o+=`<path d="M74 158 Q100 149 126 158 L144 228 Q100 240 56 228 Z" fill="${NAVY}" ${s}/>`;
+  o+=`<path d="M92 158 L88 233 M108 158 L112 233" ${gl} stroke-width="2.5"/><path d="M59 221 Q100 233 141 221" ${gl} stroke-width="3.5"/>`;
+  o+=`<g fill="${GOLD}" font-family="system-ui,sans-serif" font-weight="700" font-size="13" text-anchor="middle"><text x="78" y="205">×</text><text x="122" y="205">÷</text><text x="75" y="220">+</text><text x="125" y="220">=</text></g>`;
+  o+=`<path d="M96 176 L104 186 L98 198 L103 212" ${gl} stroke-width="1" opacity=".8"/><g fill="${GOLD}"><circle cx="96" cy="176" r="1.8"/><circle cx="104" cy="186" r="1.8"/><circle cx="98" cy="198" r="1.8"/><circle cx="103" cy="212" r="1.8"/></g>`;
+  /* そで・手 */
+  o+=`<path d="M76 161 L20 170 L26 198 L78 186 Z" fill="${NAVY}" ${s}/><path d="M23 174 L28 195" ${gl} stroke-width="3"/>`;
+  o+=`<path d="M124 161 L176 176 L166 202 L122 186 Z" fill="${NAVY}" ${s}/><path d="M174 180 L166 199" ${gl} stroke-width="3"/><circle cx="178" cy="190" r="7.5" fill="${SKIN}" stroke="${OL}" stroke-width="2.5"/>`;
+  /* かお */
+  o+=`<ellipse cx="100" cy="112" rx="50" ry="44" fill="${SKIN}" ${s}/>`;
+  o+=`<polygon points="${starPts(8,3.5,4)}" transform="translate(100,160)" fill="${GOLD}" stroke="${OL}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  o+=`<path d="M52 98 Q38 124 52 140 Q42 152 56 160 Q66 142 61 110 Z" fill="${SILV}" ${s}/><path d="M148 98 Q162 124 148 140 Q158 152 144 160 Q134 142 139 110 Z" fill="${SILV}" ${s}/>`;
+  o+=`<circle cx="52" cy="132" r="3.2" fill="${GOLD}" stroke="${OL}" stroke-width="1"/><circle cx="148" cy="132" r="3.2" fill="${GOLD}" stroke="${OL}" stroke-width="1"/>`;
+  o+=`<g class="eyes">${eyes}</g>${brow}<ellipse cx="66" cy="132" rx="7" ry="4" fill="#ff9db5" opacity=".35"/><ellipse cx="134" cy="132" rx="7" ry="4" fill="#ff9db5" opacity=".35"/>${mouth}`;
+  o+=`<path d="M51 110 Q52 74 100 72 Q148 74 149 110 Q142 97 128 98 Q111 99 105 82 Q94 100 72 98 Q59 98 51 110 Z" fill="${SILV}" ${s}/>`;
+  /* ぼうし */
+  o+=`<g transform="rotate(-6 100 78)"><ellipse cx="100" cy="78" rx="80" ry="16" fill="${NAVY}" ${s}/><ellipse cx="100" cy="78" rx="73" ry="11.5" ${gl} stroke-width="2"/>`;
+  o+=`<path d="M58 74 Q70 14 122 8 Q138 0 150 6 Q136 10 146 22 Q132 22 134 34 Q138 54 142 72 Q100 87 58 74 Z" fill="${NAVY}" ${s}/>`;
+  o+=`<path d="M60.5 64 Q100 79 140.5 62 L142 72 Q100 87 58 74 Z" fill="${GOLD}" ${s}/>`;
+  o+=`<g fill="${GOLD}"><circle cx="84" cy="48" r="1.6"/><circle cx="104" cy="30" r="1.6"/><circle cx="120" cy="50" r="1.6"/><circle cx="96" cy="56" r="1.3"/></g><path d="M84 48 L104 30 L120 50" ${gl} stroke-width=".9" opacity=".8"/>`;
+  o+=`<ellipse cx="104" cy="44" rx="40" ry="9" transform="rotate(-16 104 44)" ${gl} stroke-width="3"/><ellipse cx="104" cy="44" rx="30" ry="6" transform="rotate(14 104 44)" ${gl} stroke-width="2.2"/><circle cx="104" cy="44" r="5" fill="${GOLD}" stroke="${OL}" stroke-width="1.5"/></g>`;
+  o+=`<g fill="${GOLD}" font-family="system-ui,sans-serif" font-weight="700" font-size="11" opacity=".85"><text x="178" y="34">3</text><text x="192" y="58">6</text><text x="166" y="14">2</text><text x="60" y="22">7</text><text x="74" y="8">9</text></g>`;
+  /* つえ */
+  o+=`<path d="M24 244 L20 70" stroke="${OL}" stroke-width="8.5" stroke-linecap="round"/><path d="M24 244 L20 70" stroke="#8a5a34" stroke-width="5" stroke-linecap="round"/>`;
+  o+=`<ellipse cx="20" cy="84" rx="13" ry="4.5" transform="rotate(-18 20 84)" ${gl} stroke-width="3"/><ellipse cx="20" cy="70" rx="15" ry="5" transform="rotate(14 20 70)" ${gl} stroke-width="3"/><ellipse cx="20" cy="56" rx="12" ry="4" transform="rotate(-10 20 56)" ${gl} stroke-width="2.5"/>`;
+  o+=`<circle cx="19" cy="40" r="19" fill="#5ab4ff" opacity=".28"/><polygon points="19,16 29,40 19,62 9,40" fill="#4aa8ff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><polygon points="19,16 22,40 19,62 15,40" fill="#bfe4ff" opacity=".85"/>`;
+  o+=`<circle cx="23" cy="180" r="7.5" fill="${SKIN}" stroke="${OL}" stroke-width="2.5"/>`;
+  return o+'</svg>';
+}
+
+/* ========== 大魔女の試練・復習 ========== */
+try{trialDone=JSON.parse(localStorage.getItem('kukuru-trial')||'{}')||{}}catch(e){trialDone={}}
+const speakBtn=$('speakBtn');
+const GP={
+  start1:'ほほう、試練に挑むか。かくれた数字を見抜いて、式をまるごと唱えるのじゃ。',
+  start2:'魔法だけを見せよう。色と形から、もとの式を見抜いて唱えるのじゃ。',
+  ok:['見事じゃ。','ほほう、やりおるのう。','その眼力、本物じゃな。','よかろう、次じゃ。'],
+  fail:'ふむ…違うようじゃ。よく見て、もう一度。',
+  other:'それも同じ数になるが、別の魔法じゃ。ヒントで属性を見てみよ。',
+  clear:'試練、突破じゃ。よくぞここまで来たのう。',
+  perfect:'一度も降参せずに突破とは…あっぱれじゃ！',
+  zSeen:'この魔法を復習するのじゃな。お手本を聞いて、もう一度唱えてみよ。',
+  zYet:'まだ見ぬ魔法じゃ。この数を作る呪文を探してみよ。'};
+function sameProduct(alts){
+  for(const t of alts)for(const L of [numsJa(t),nums(t)]){
+    if(L.length>=3&&L[0]>=1&&L[0]<=9&&L[1]>=1&&L[1]<=9&&L[0]*L[1]===Q.ans&&L[2]===Q.ans)return true}
+  return false;
+}
+function showMagic(a,b){
+  setBg(a,b);acc={h:0,v:0};emit={a,b,t:0};circ={a,b,t:0};
+  const r=eqEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;
+}
+function trialMarks(){for(const n of [1,2])$('trial'+n).innerHTML=`<b>${n===1?'数あて':'魔法あて'}</b><small>${n===1?'かくれた数字を見抜く':'魔法だけ見て式を当てる'}</small><i>${trialDone[n]?'✦':'・'}${trialDone[n+'p']?'★':'・'}</i>`}
+function startTrial(n){if(casting)return;trial=n;dan=0;trialIdx=0;trialMiss=false;enterPlay();modeLabel();say(GP['start'+n]);startQuestion()}
+function trialClear(){
+  const n=trial;trialDone[n]=1;if(!trialMiss)trialDone[n+'p']=1;
+  try{localStorage.setItem('kukuru-trial',JSON.stringify(trialDone))}catch(e){}
+  Q=null;setBg(0,0);eqEl.innerHTML='<span style="font-size:.42em">試練 突破！</span>';axisEl.textContent='';hintEl.textContent='';
+  hintBtn.classList.add('hide');speakBtn.classList.add('hide');
+  say(trialMiss?GP.clear:GP.perfect);idle('happy');
+  cx=cw/2;cy=ch*.38;burst(8,170);rings=[{t:0,d:0,col:GOLD},{t:0,d:.2,col:'#fff'},{t:0,d:.4,col:'#5ab4ff'}];chime(8,8);
+  if(cutinOn)showCutin(8,8);
+  setTimeout(()=>openDan('試練 突破！ つぎは？'),2600);
+}
+$('trial1').onclick=()=>startTrial(1);$('trial2').onclick=()=>startTrial(2);
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){say('この端末では、お手本の読み上げが使えないみたい。')}}
+speakBtn.onclick=()=>{if(Q&&!Q.hide)speak(Q.phrase)};
+function closeDetail(){$('detail').classList.add('hide')}
+$('dClose').onclick=closeDetail;
+function openDetail(a,b){
+  if(casting)return;const sn=!!seen[a+'x'+b];
+  $('dFace').innerHTML=grandSVG(sn?'calm':'happy');
+  $('dSay').textContent=sn?GP.zSeen:GP.zYet;
+  $('dEq').innerHTML=sn?`<span style="color:${ATTR[a].c}">${a}</span> × <span style="color:${ATTR[b].c}">${b}</span> = ${a*b}`:`？ × ？ = ${a*b}`;
+  $('dKana').innerHTML=sn?`${kanaPhrase(a,b)}<br><small>${phraseOf(a,b)}</small><br><small>${ATTR[a].n} × ${ATTR[b].n}（${ATTR[a].l} ${ATTR[b].l}）</small>`:'<small>挑戦中に「ヒント」を押すと、属性がわかるよ</small>';
+  const B=$('dBtns');B.innerHTML='';
+  const add=(t,f,main)=>{const x=document.createElement('button');x.textContent=t;if(main)x.className='main';x.onclick=f;B.appendChild(x)};
+  const go=(opt,msg)=>{closeDetail();zk.classList.add('hide');enterPlay();say(msg);startQuestion([a,b],opt)};
+  if(sn){
+    add('🎙 この魔法に再挑戦する',()=>go({side:true},'復習じゃ。もう一度唱えてみよ。'),true);
+    add('🔊 お手本を聞く',()=>speak(phraseOf(a,b)));
+    add('✨ 魔法を見る',()=>{closeDetail();zk.classList.add('hide');cast(a,b,true)});
+  }else add('🎙 この呪文を探して唱える',()=>go({side:true,hide:'both'},`${a*b} を作る呪文を探すのじゃ。`),true);
+  $('detail').classList.remove('hide');
+}
 
 /* ========== 魔法発動 ========== */
 function setBg(a,b){bg1.style.backgroundColor=a?hexA(ATTR[a].c,.5):'#1a0f3d';bg2.style.backgroundColor=b?hexA(ATTR[b].c,.5):'transparent'}
 function cast(a,b,preview){
-  casting=true;
+  casting=true;if(!preview&&Q&&Q.hide)renderEq(true);
   const r=eqEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;
   if(preview){cx=cw/2;cy=ch*.4}
   setBg(a,b);acc={h:0,v:0};emit={a,b,t:0};circ={a,b,t:0};P=P.filter(p=>false);
@@ -527,6 +763,9 @@ function cast(a,b,preview){
     casting=false;setBg(0,0);
     if(preview){return}
     if(tutorial){tutorial=false;say('すごい、これが魔法！ここからが本番だよ。画面の式を英語で唱えてね。')}
+    else if(Q&&Q.side){say(trial?pick(GP.ok):'復習ばっちり！')}
+    else if(trial){trialIdx++;if(trialIdx>=9){trialClear();return}say(pick(GP.ok))}
+    else if(dan){danIdx++;if(danIdx>=9){danClear();return}say(pick(PERS[dan].ok))}
     else{say(['いいね！次はどんな魔法かな？','その調子！','きれい…！もう一回いこう！','上手に唱えられたね！'][Math.floor(Math.random()*4)])}
     startQuestion();
   },3000);
@@ -544,8 +783,8 @@ function buildGrid(){
       const bt=document.createElement('button');
       bt.style.background=`linear-gradient(90deg,${hexA(ATTR[a].c,.8)} 0 50%,${hexA(ATTR[b].c,.8)} 50% 100%)`;
       if(ATTR[a].c==='#fff2a8'||ATTR[b].c==='#fff2a8')bt.style.textShadow='0 1px 3px #000';
-      bt.textContent=`${a}×${b}`;if(seen[a+'x'+b])bt.className='done';
-      bt.onclick=()=>{if(casting)return;zk.classList.add('hide');cast(a,b,true)};
+      if(seen[a+'x'+b]){bt.textContent=`${a}×${b}`;bt.className='done'}else{bt.textContent=a*b;bt.className='yet'}
+      bt.onclick=()=>openDetail(a,b);
       grid.appendChild(bt);
     }
   }
